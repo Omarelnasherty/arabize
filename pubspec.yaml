@@ -1,0 +1,15 @@
+name: arabize_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+workspace:
+  - packages/arabize
+  - packages/arabize_lints
+  - packages/arabize_cli
+  - packages/arabize_test
+  - example
+
+dev_dependencies:
+  lints: ^6.0.0
