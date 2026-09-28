@@ -29,7 +29,7 @@ One small step at a time. Checked items are done.
 - [ ] Prepare 0.3.0
 
 ## 0.4 Translation
-- [ ] `arabize translate`: provider interface and a Claude (Anthropic API) provider, API key from env
+- [ ] `arabize translate`: provider interface with OpenAI, Gemini and Anthropic providers, API key from env
 - [ ] Keep ICU placeholders, plurals and select intact; validate output and retry on mismatch
 - [ ] `arabize.yaml`: glossary, do-not-translate list, tone (MSA or Egyptian)
 - [ ] Translate only new or changed keys
