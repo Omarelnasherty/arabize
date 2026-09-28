@@ -1,0 +1,17 @@
+name: arabize
+description: Text utilities for Arabic apps, such as search normalization and digit conversion.
+version: 0.0.1
+repository: https://github.com/Omarelnasherty/arabize/tree/main/packages/arabize
+issue_tracker: https://github.com/Omarelnasherty/arabize/issues
+topics:
+  - arabic
+  - rtl
+  - localization
+  - flutter
+
+environment:
+  sdk: ^3.10.0
+resolution: workspace
+
+dev_dependencies:
+  test: ^1.25.0

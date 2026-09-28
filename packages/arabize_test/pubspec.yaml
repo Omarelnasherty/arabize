@@ -1,0 +1,20 @@
+name: arabize_test
+description: Flutter test helpers for running widget tests in both text directions.
+version: 0.0.1
+repository: https://github.com/Omarelnasherty/arabize/tree/main/packages/arabize_test
+issue_tracker: https://github.com/Omarelnasherty/arabize/issues
+topics:
+  - arabic
+  - rtl
+  - localization
+  - flutter
+
+environment:
+  sdk: ^3.10.0
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
