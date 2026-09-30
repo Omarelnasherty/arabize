@@ -5,7 +5,7 @@ One small step at a time. Checked items are done.
 ## 0.1 Lints
 - [x] Workspace setup: pub workspace, the four packages as empty skeletons, example app, CI (format, analyze, test), README, .gitignore
 - [x] Plugin skeleton and `prefer_directional_edge_insets` rule (EdgeInsets.only with left/right, EdgeInsets.fromLTRB)
-- [ ] Quick fix for `prefer_directional_edge_insets`
+- [x] Quick fix for `prefer_directional_edge_insets`
 - [ ] `prefer_directional_alignment` rule and fix (Alignment.centerLeft -> AlignmentDirectional.centerStart, etc.)
 - [ ] `prefer_positioned_directional` rule and fix
 - [ ] `prefer_text_align_start_end` rule and fix (TextAlign.left/right)
