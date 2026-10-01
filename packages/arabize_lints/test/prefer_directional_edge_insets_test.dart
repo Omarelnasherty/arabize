@@ -1,7 +1,9 @@
 // ignore_for_file: non_constant_identifier_names
 import 'package:analyzer_testing/analysis_rule/analysis_rule.dart';
 import 'package:arabize_lints/src/rules/prefer_directional_edge_insets.dart';
+
 import 'edge_insets_stub.dart';
+
 import 'package:test_reflective_loader/test_reflective_loader.dart';
 
 void main() {
