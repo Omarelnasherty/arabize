@@ -7,7 +7,7 @@ One small step at a time. Checked items are done.
 - [x] Plugin skeleton and `prefer_directional_edge_insets` rule (EdgeInsets.only with left/right, EdgeInsets.fromLTRB)
 - [x] Quick fix for `prefer_directional_edge_insets`
 - [x] `prefer_directional_alignment` rule and fix (Alignment.centerLeft -> AlignmentDirectional.centerStart, etc.)
-- [ ] `prefer_positioned_directional` rule and fix
+- [x] `prefer_positioned_directional` rule and fix
 - [ ] `prefer_text_align_start_end` rule and fix (TextAlign.left/right)
 - [ ] `avoid_hardcoded_text_direction` rule
 - [ ] `prefer_directional_border_radius` and `prefer_directional_border` rules and fixes
