@@ -4,9 +4,11 @@ import 'package:analysis_server_plugin/registry.dart';
 import 'src/fixes/use_directional_alignment.dart';
 import 'src/fixes/use_directional_edge_insets.dart';
 import 'src/fixes/use_positioned_directional.dart';
+import 'src/fixes/use_text_align_start_end.dart';
 import 'src/rules/prefer_directional_alignment.dart';
 import 'src/rules/prefer_directional_edge_insets.dart';
 import 'src/rules/prefer_positioned_directional.dart';
+import 'src/rules/prefer_text_align_start_end.dart';
 
 /// The plugin instance the analysis server loads.
 final plugin = ArabizePlugin();
@@ -32,6 +34,11 @@ class ArabizePlugin extends Plugin {
     registry.registerFixForRule(
       PreferPositionedDirectional.code,
       UsePositionedDirectional.new,
+    );
+    registry.registerLintRule(PreferTextAlignStartEnd());
+    registry.registerFixForRule(
+      PreferTextAlignStartEnd.code,
+      UseTextAlignStartEnd.new,
     );
   }
 }
