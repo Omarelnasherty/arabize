@@ -7,3 +7,4 @@
 - Add a quick fix for `prefer_directional_edge_insets`.
 - Add the `prefer_directional_alignment` rule and its quick fix.
 - Add the `prefer_positioned_directional` rule and its quick fix.
+- Add the `prefer_text_align_start_end` rule and its quick fix.
