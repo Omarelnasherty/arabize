@@ -9,7 +9,7 @@ One small step at a time. Checked items are done.
 - [x] `prefer_directional_alignment` rule and fix (Alignment.centerLeft -> AlignmentDirectional.centerStart, etc.)
 - [x] `prefer_positioned_directional` rule and fix
 - [x] `prefer_text_align_start_end` rule and fix (TextAlign.left/right)
-- [ ] `avoid_hardcoded_text_direction` rule
+- [x] `avoid_hardcoded_text_direction` rule
 - [ ] `prefer_directional_border_radius` and `prefer_directional_border` rules and fixes
 - [ ] `avoid_unmirrored_icons` rule (chevron_left, keyboard_arrow_right, and similar icons that don't flip in RTL)
 - [ ] Example app that triggers every rule, usage section in README
