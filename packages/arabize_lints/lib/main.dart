@@ -8,6 +8,7 @@ import 'src/fixes/use_directional_edge_insets.dart';
 import 'src/fixes/use_positioned_directional.dart';
 import 'src/fixes/use_text_align_start_end.dart';
 import 'src/rules/avoid_hardcoded_text_direction.dart';
+import 'src/rules/avoid_unmirrored_icons.dart';
 import 'src/rules/prefer_directional_alignment.dart';
 import 'src/rules/prefer_directional_border.dart';
 import 'src/rules/prefer_directional_border_radius.dart';
@@ -56,5 +57,6 @@ class ArabizePlugin extends Plugin {
       UseDirectionalBorder.new,
     );
     registry.registerLintRule(AvoidHardcodedTextDirection());
+    registry.registerLintRule(AvoidUnmirroredIcons());
   }
 }
