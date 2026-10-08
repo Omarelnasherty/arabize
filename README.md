@@ -19,6 +19,36 @@ Planned:
 | `packages/arabize_test` | Flutter test helpers |
 | `example` | Example Flutter app |
 
+## Usage
+
+Add the plugin to the `analysis_options.yaml` at the root of your project (or pub workspace):
+
+```yaml
+plugins:
+  arabize_lints:
+    path: packages/arabize_lints
+    diagnostics:
+      prefer_directional_edge_insets: true
+      prefer_directional_alignment: true
+      prefer_positioned_directional: true
+      prefer_text_align_start_end: true
+      avoid_hardcoded_text_direction: true
+      prefer_directional_border_radius: true
+      prefer_directional_border: true
+      avoid_unmirrored_icons: true
+```
+
+Then code like this is flagged:
+
+```dart
+Padding(
+  padding: EdgeInsets.only(left: 16),   // prefer_directional_edge_insets
+  child: Text('arabize', textAlign: TextAlign.left), // prefer_text_align_start_end
+)
+```
+
+Most rules come with a quick fix in the editor. `example/lib/rtl_issues.dart` triggers every rule. Run `flutter analyze` in the repo to see them.
+
 ## Development
 
 ```

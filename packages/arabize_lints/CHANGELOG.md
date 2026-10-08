@@ -11,3 +11,4 @@
 - Add the `avoid_hardcoded_text_direction` rule.
 - Add the `prefer_directional_border_radius` and `prefer_directional_border` rules and their quick fixes.
 - Add the `avoid_unmirrored_icons` rule.
+- Add an example app that triggers every rule and a usage section in the README.

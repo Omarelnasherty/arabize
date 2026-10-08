@@ -12,7 +12,7 @@ One small step at a time. Checked items are done.
 - [x] `avoid_hardcoded_text_direction` rule
 - [x] `prefer_directional_border_radius` and `prefer_directional_border` rules and fixes
 - [x] `avoid_unmirrored_icons` rule (chevron_left, keyboard_arrow_right, and similar icons that don't flip in RTL)
-- [ ] Example app that triggers every rule, usage section in README
+- [x] Example app that triggers every rule, usage section in README
 - [ ] Prepare 0.1.0
 
 ## 0.2 CLI
