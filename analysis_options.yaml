@@ -1,1 +1,14 @@
 include: package:lints/recommended.yaml
+
+plugins:
+  arabize_lints:
+    path: packages/arabize_lints
+    diagnostics:
+      prefer_directional_edge_insets: true
+      prefer_directional_alignment: true
+      prefer_positioned_directional: true
+      prefer_text_align_start_end: true
+      avoid_hardcoded_text_direction: true
+      prefer_directional_border_radius: true
+      prefer_directional_border: true
+      avoid_unmirrored_icons: true
