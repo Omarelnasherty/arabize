@@ -1,6 +1,6 @@
 name: arabize_lints
 description: Analyzer lints that catch left-to-right layout assumptions in Flutter code.
-version: 0.0.1
+version: 0.1.0
 repository: https://github.com/Omarelnasherty/arabize/tree/main/packages/arabize_lints
 issue_tracker: https://github.com/Omarelnasherty/arabize/issues
 topics:
