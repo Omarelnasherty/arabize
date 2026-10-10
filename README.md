@@ -49,6 +49,15 @@ Padding(
 
 Most rules come with a quick fix in the editor. `example/lib/rtl_issues.dart` triggers every rule. Run `flutter analyze` in the repo to see them.
 
+### Command line
+
+`arabize check` runs `dart analyze` and prints only the arabize rules. It exits with 1 when something is found, so it works in CI. The plugin must be enabled as shown above.
+
+```
+dart run arabize_cli:arabize check
+dart run arabize_cli:arabize check lib --format json
+```
+
 ## Development
 
 ```
