@@ -58,6 +58,13 @@ dart run arabize_cli:arabize check
 dart run arabize_cli:arabize check lib --format json
 ```
 
+`arabize fix` rewrites everything that has a fix. `--dry-run` prints a diff and leaves the files alone. Findings without a fix, like icons that should mirror, are counted but not changed.
+
+```
+dart run arabize_cli:arabize fix --dry-run
+dart run arabize_cli:arabize fix lib
+```
+
 ## Development
 
 ```

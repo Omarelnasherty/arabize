@@ -8,7 +8,8 @@ import 'finding.dart';
 /// Runs `dart analyze --format=json` on [path] and returns its stdout.
 typedef AnalyzeRunner = Future<String> Function(String path);
 
-Future<String> _dartAnalyze(String path) async {
+/// Runs the real `dart analyze`.
+Future<String> dartAnalyze(String path) async {
   final result = await Process.run('dart', [
     'analyze',
     '--format=json',
@@ -24,7 +25,7 @@ Future<String> _dartAnalyze(String path) async {
 Future<int> runCheck(
   List<String> args,
   void Function(String) out, {
-  AnalyzeRunner analyze = _dartAnalyze,
+  AnalyzeRunner analyze = dartAnalyze,
 }) async {
   var path = '.';
   var format = 'text';

@@ -2,8 +2,10 @@
 library;
 
 import 'src/check.dart';
+import 'src/fix.dart';
 
 export 'src/check.dart' show AnalyzeRunner, runCheck;
+export 'src/fix.dart' show runFix;
 export 'src/finding.dart' show Finding, arabizeRules, parseAnalyzeOutput;
 
 /// The package version.
@@ -14,6 +16,7 @@ Usage: arabize <command>
 
 Commands:
   check [path] [--format text|json]   Report RTL issues, exit 1 if any.
+  fix [path] [--dry-run]              Apply the fixes, or print a diff.
   --version                           Print the version.''';
 
 /// Runs the CLI with [args] and returns the exit code.
@@ -30,6 +33,11 @@ Future<int> run(
     return analyze == null
         ? runCheck(args.sublist(1), out)
         : runCheck(args.sublist(1), out, analyze: analyze);
+  }
+  if (args.isNotEmpty && args.first == 'fix') {
+    return analyze == null
+        ? runFix(args.sublist(1), out)
+        : runFix(args.sublist(1), out, analyze: analyze);
   }
   out(_usage);
   return args.isEmpty ? 0 : 64;
