@@ -18,6 +18,12 @@ class Finding {
   final String file;
   final int line;
   final int column;
+
+  /// Start of the flagged code, in UTF-16 units from the file start.
+  final int offset;
+
+  /// Length of the flagged code.
+  final int length;
   final String message;
 
   const Finding({
@@ -25,6 +31,8 @@ class Finding {
     required this.file,
     required this.line,
     required this.column,
+    this.offset = 0,
+    this.length = 0,
     required this.message,
   });
 
@@ -51,15 +59,18 @@ List<Finding> parseAnalyzeOutput(String output) {
     final code = item['code'] as String?;
     if (code == null || !arabizeRules.contains(code)) continue;
     final location = item['location'] as Map<String, Object?>;
-    final start =
-        (location['range'] as Map<String, Object?>)['start']
-            as Map<String, Object?>;
+    final range = location['range'] as Map<String, Object?>;
+    final start = range['start'] as Map<String, Object?>;
+    final end = range['end'] as Map<String, Object?>;
+    final startOffset = start['offset'] as int;
     findings.add(
       Finding(
         rule: code,
         file: location['file'] as String,
         line: start['line'] as int,
         column: start['column'] as int,
+        offset: startOffset,
+        length: (end['offset'] as int) - startOffset,
         message: item['problemMessage'] as String,
       ),
     );

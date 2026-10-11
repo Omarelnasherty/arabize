@@ -17,7 +17,7 @@ One small step at a time. Checked items are done.
 
 ## 0.2 CLI
 - [x] `arabize check`: run all rules on a project, text and JSON output, non-zero exit code for CI
-- [ ] `arabize fix`: apply all fixes, `--dry-run` prints a diff
+- [x] `arabize fix`: apply all fixes, `--dry-run` prints a diff
 - [ ] Edge cases: const contexts, imports, skip generated files
 - [ ] Prepare 0.2.0
 
