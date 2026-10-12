@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import 'finding.dart';
+import 'guards.dart';
 
 /// Runs `dart analyze --format=json` on [path] and returns its stdout.
 typedef AnalyzeRunner = Future<String> Function(String path);
@@ -49,7 +50,7 @@ Future<int> runCheck(
 
   final List<Finding> findings;
   try {
-    findings = parseAnalyzeOutput(await analyze(path));
+    findings = withoutGenerated(parseAnalyzeOutput(await analyze(path)));
   } on FormatException catch (e) {
     out('Could not read analyzer output: ${e.message}');
     return 2;

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:arabize_cli/arabize_cli.dart';
 import 'package:arabize_cli/src/fix.dart';
+import 'package:arabize_cli/src/guards.dart';
 import 'package:arabize_cli/src/rewrite.dart';
 import 'package:test/test.dart';
 
@@ -166,16 +167,150 @@ void main() {
     });
   });
 
-  test('applyFixes skips findings outside the file', () {
-    const f = Finding(
-      rule: 'prefer_text_align_start_end',
-      file: 'a',
+  group('applyFixes', () {
+    Finding find(String source, String rule, String code) => Finding(
+      rule: rule,
+      file: 'a.dart',
       line: 1,
       column: 1,
-      offset: 100,
-      length: 5,
+      offset: source.indexOf(code),
+      length: code.length,
       message: 'm',
     );
-    expect(applyFixes('x', [f]).count, 0);
+
+    test('keeps const contexts const', () {
+      const source =
+          'final w = const Padding(\n'
+          '  padding: const EdgeInsets.only(left: 8),\n'
+          '  child: const Align(alignment: Alignment.centerLeft),\n'
+          ');\n';
+      final result = applyFixes(source, [
+        find(
+          source,
+          'prefer_directional_edge_insets',
+          'const EdgeInsets.only(left: 8)',
+        ),
+        find(source, 'prefer_directional_alignment', 'Alignment.centerLeft'),
+      ]);
+      expect(result.count, 2);
+      expect(
+        result.text,
+        contains('const EdgeInsetsDirectional.only(start: 8)'),
+      );
+      expect(result.text, contains('AlignmentDirectional.centerStart'));
+    });
+
+    test('skips code assigned to a concrete type', () {
+      const source =
+          'class A {\n'
+          '  final EdgeInsets a = EdgeInsets.only(left: 1);\n'
+          '  EdgeInsets? get b => EdgeInsets.only(left: 2);\n'
+          '  void f({EdgeInsets c = const EdgeInsets.only(left: 3)}) {}\n'
+          '  final EdgeInsetsGeometry d = EdgeInsets.only(left: 4);\n'
+          '}\n';
+      final result = applyFixes(source, [
+        find(
+          source,
+          'prefer_directional_edge_insets',
+          'EdgeInsets.only(left: 1)',
+        ),
+        find(
+          source,
+          'prefer_directional_edge_insets',
+          'EdgeInsets.only(left: 2)',
+        ),
+        find(
+          source,
+          'prefer_directional_edge_insets',
+          'const EdgeInsets.only(left: 3)',
+        ),
+        find(
+          source,
+          'prefer_directional_edge_insets',
+          'EdgeInsets.only(left: 4)',
+        ),
+      ]);
+      expect(result.count, 1);
+      expect(result.text, contains('EdgeInsetsDirectional.only(start: 4)'));
+      expect(result.text, contains('EdgeInsets.only(left: 1)'));
+    });
+
+    test('adds the directional class to a show clause', () {
+      const source =
+          "import 'package:flutter/painting.dart' show EdgeInsets;\n"
+          "import 'package:other/other.dart' show EdgeInsets;\n"
+          'final p = EdgeInsets.only(left: 8);\n';
+      final result = applyFixes(source, [
+        find(
+          source,
+          'prefer_directional_edge_insets',
+          'EdgeInsets.only(left: 8)',
+        ),
+      ]);
+      expect(
+        result.text,
+        startsWith(
+          "import 'package:flutter/painting.dart' "
+          'show EdgeInsets, EdgeInsetsDirectional;\n'
+          "import 'package:other/other.dart' show EdgeInsets;\n",
+        ),
+      );
+    });
+
+    test('skips findings outside the file', () {
+      expect(
+        applyFixes('x', [
+          const Finding(
+            rule: 'prefer_text_align_start_end',
+            file: 'a',
+            line: 1,
+            column: 1,
+            offset: 100,
+            length: 5,
+            message: 'm',
+          ),
+        ]).count,
+        0,
+      );
+    });
+  });
+
+  group('generated files', () {
+    late Directory dir;
+    setUp(() => dir = Directory.systemTemp.createTempSync('arabize_gen'));
+    tearDown(() => dir.deleteSync(recursive: true));
+
+    test('are recognised by name and by header', () {
+      final marked = File('${dir.path}/a.dart')
+        ..writeAsStringSync('// GENERATED CODE - DO NOT MODIFY BY HAND\n');
+      final plain = File('${dir.path}/b.dart')
+        ..writeAsStringSync('void f() {}');
+      expect(isGeneratedFile(marked.path), isTrue);
+      expect(isGeneratedFile(plain.path), isFalse);
+      expect(isGeneratedFile('${dir.path}/c.g.dart'), isTrue);
+      expect(isGeneratedFile('${dir.path}/missing.dart'), isFalse);
+    });
+
+    test('check ignores their findings', () async {
+      final file = File('${dir.path}/m.freezed.dart')..writeAsStringSync('x');
+      final output = jsonEncode({
+        'diagnostics': [
+          {
+            'code': 'prefer_text_align_start_end',
+            'problemMessage': 'm',
+            'location': {
+              'file': file.path,
+              'range': {
+                'start': {'offset': 0, 'line': 1, 'column': 1},
+                'end': {'offset': 1, 'line': 1, 'column': 2},
+              },
+            },
+          },
+        ],
+      });
+      final lines = <String>[];
+      expect(await run(['check'], lines.add, analyze: (_) async => output), 0);
+      expect(lines, ['No issues found.']);
+    });
   });
 }
