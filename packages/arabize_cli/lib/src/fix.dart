@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:path/path.dart' as p;
 
 import 'check.dart';
 import 'finding.dart';
+import 'guards.dart';
 import 'rewrite.dart';
 
 /// Implements `arabize fix [path] [--dry-run]`.
@@ -31,7 +33,7 @@ Future<int> runFix(
 
   final List<Finding> findings;
   try {
-    findings = parseAnalyzeOutput(await analyze(path));
+    findings = withoutGenerated(parseAnalyzeOutput(await analyze(path)));
   } on FormatException catch (e) {
     out('Could not read analyzer output: ${e.message}');
     return 2;
@@ -60,9 +62,7 @@ Future<int> runFix(
     }
   }
 
-  final skipped =
-      findings.length -
-      findings.where((f) => fixableRules.contains(f.rule)).length;
+  final skipped = findings.length - fixed;
   final issues = '$fixed issue${fixed == 1 ? '' : 's'}';
   final inFiles = '$files file${files == 1 ? '' : 's'}';
   out(dryRun ? 'Would fix $issues in $inFiles.' : 'Fixed $issues in $inFiles.');
@@ -75,13 +75,18 @@ Future<int> runFix(
 /// Returns the new text and the number of findings that changed something.
 ({String text, int count}) applyFixes(String source, List<Finding> findings) {
   final edits = <Edit>[];
+  final added = <String>{};
+  final unit = parseString(content: source, throwIfDiagnostics: false).unit;
   var count = 0;
   for (final f in findings) {
     if (f.offset + f.length > source.length) continue;
+    if (isTypedContext(unit, f)) continue;
     final snippet = source.substring(f.offset, f.offset + f.length);
     final local = rewriteSnippet(f.rule, snippet);
     if (local.isEmpty) continue;
     count++;
+    final directional = directionalTypeFor(f.rule);
+    if (directional != null) added.add(directional);
     for (final e in local) {
       edits.add((offset: e.offset + f.offset, length: e.length, text: e.text));
     }
@@ -89,6 +94,11 @@ Future<int> runFix(
   // Findings can nest (a Border inside a Border), so drop repeated edits.
   final seen = <int>{};
   edits.removeWhere((e) => !seen.add(e.offset));
+  if (count > 0) {
+    for (final e in importEdits(source, added)) {
+      edits.add((offset: e.offset, length: 0, text: e.text));
+    }
+  }
   edits.sort((a, b) => b.offset.compareTo(a.offset));
   var text = source;
   for (final e in edits) {
