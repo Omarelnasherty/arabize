@@ -2,4 +2,4 @@
 library;
 
 /// The package version.
-const String arabizeLintsVersion = '0.0.1';
+const String arabizeLintsVersion = '0.1.0';
