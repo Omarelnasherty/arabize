@@ -19,7 +19,7 @@ One small step at a time. Checked items are done.
 - [x] `arabize check`: run all rules on a project, text and JSON output, non-zero exit code for CI
 - [x] `arabize fix`: apply all fixes, `--dry-run` prints a diff
 - [x] Edge cases: const contexts, imports, skip generated files
-- [ ] Prepare 0.2.0
+- [x] Prepare 0.2.0
 
 ## 0.3 Strings
 - [ ] `arabize extract`: find hardcoded user-facing strings (Text, hintText, labelText, tooltip, SnackBar content, ...)

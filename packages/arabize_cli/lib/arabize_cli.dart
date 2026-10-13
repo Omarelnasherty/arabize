@@ -9,7 +9,7 @@ export 'src/fix.dart' show runFix;
 export 'src/finding.dart' show Finding, arabizeRules, parseAnalyzeOutput;
 
 /// The package version.
-const String arabizeCliVersion = '0.0.1';
+const String arabizeCliVersion = '0.2.0';
 
 const _usage = '''
 Usage: arabize <command>

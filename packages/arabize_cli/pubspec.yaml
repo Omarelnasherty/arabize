@@ -1,6 +1,6 @@
 name: arabize_cli
 description: Command line tool to check, fix and translate Flutter apps for Arabic and RTL.
-version: 0.0.1
+version: 0.2.0
 repository: https://github.com/Omarelnasherty/arabize/tree/main/packages/arabize_cli
 issue_tracker: https://github.com/Omarelnasherty/arabize/issues
 topics:
