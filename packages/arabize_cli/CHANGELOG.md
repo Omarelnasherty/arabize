@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `arabize extract` to list hardcoded user-facing strings.
+
 ## 0.2.0
 
 - Add `arabize check` with text and JSON output and a non-zero exit code.

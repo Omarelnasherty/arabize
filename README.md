@@ -65,6 +65,13 @@ dart run arabize_cli:arabize fix --dry-run
 dart run arabize_cli:arabize fix lib
 ```
 
+`arabize extract` lists hardcoded strings in `Text`, `hintText`, `labelText`, `tooltip` and similar arguments under `lib`. It only reads files, nothing is changed.
+
+```
+dart run arabize_cli:arabize extract
+dart run arabize_cli:arabize extract --format json
+```
+
 ## Development
 
 ```
