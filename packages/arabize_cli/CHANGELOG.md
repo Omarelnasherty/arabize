@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add `arabize extract` to list hardcoded user-facing strings. Requires analyzer 14.5 or newer.
+- Add `arabize extract` to list hardcoded user-facing strings.
 
 ## 0.2.0
 

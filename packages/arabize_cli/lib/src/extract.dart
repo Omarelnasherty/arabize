@@ -89,16 +89,17 @@ class _StringVisitor extends RecursiveAstVisitor<void> {
   }
 
   void _visitCall(String name, ArgumentList arguments) {
-    final positional = arguments.arguments.where((a) => a is! NamedArgument);
-    if (_textWidgets.contains(name) && positional.isNotEmpty) {
-      _add(name, positional.first.argumentExpression);
-    }
+    var positional = true;
     for (final argument in arguments.arguments) {
-      if (argument is! NamedArgument) continue;
-      final label = argument.name.lexeme;
-      if (_textArguments.contains(label) ||
+      final label = _labelOf(argument);
+      final value = _valueOf(argument, label != null);
+      if (value == null) continue;
+      if (label == null) {
+        if (positional && _textWidgets.contains(name)) _add(name, value);
+        positional = false;
+      } else if (_textArguments.contains(label) ||
           (label == 'message' && name == 'Tooltip')) {
-        _add(label, argument.argumentExpression);
+        _add(label, value);
       }
     }
   }
@@ -214,3 +215,15 @@ Future<int> runExtract(List<String> args, void Function(String) out) async {
   }
   return 0;
 }
+
+// Argument node types differ between analyzer 13 and 14, so these helpers
+// only rely on the source text and the child expressions.
+final _namedArgument = RegExp(r'^(\w+)\s*:');
+
+String? _labelOf(AstNode argument) =>
+    _namedArgument.firstMatch(argument.toSource())?.group(1);
+
+Expression? _valueOf(AstNode argument, bool named) =>
+    !named && argument is Expression
+    ? argument
+    : argument.childEntities.whereType<Expression>().lastOrNull;
