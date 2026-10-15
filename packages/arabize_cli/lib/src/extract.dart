@@ -7,6 +7,7 @@ import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/source/line_info.dart';
 import 'package:path/path.dart' as p;
 
+import 'arb.dart';
 import 'guards.dart';
 
 /// Widgets whose first positional argument is shown to the user.
@@ -162,16 +163,50 @@ List<File> dartFiles(String path) {
   return files..sort((a, b) => a.path.compareTo(b.path));
 }
 
-/// Implements `arabize extract [path] [--format text|json]`.
+/// Finds the template ARB file of the project at [path].
+///
+/// Reads `arb-dir` and `template-arb-file` from `l10n.yaml` when present and
+/// falls back to `lib/l10n/app_en.arb`.
+String arbPathFor(String path) {
+  var dir = 'lib/l10n';
+  var template = 'app_en.arb';
+  final config = File(p.join(path, 'l10n.yaml'));
+  if (config.existsSync()) {
+    final text = config.readAsStringSync();
+    dir = _yamlValue(text, 'arb-dir') ?? dir;
+    template = _yamlValue(text, 'template-arb-file') ?? template;
+  }
+  return p.join(path, dir, template);
+}
+
+String? _yamlValue(String yaml, String key) {
+  final match = RegExp(
+    '^$key:'
+    r'\s*(.+?)\s*$',
+    multiLine: true,
+  ).firstMatch(yaml);
+  return match?.group(1)?.replaceAll(RegExp(r'''^['"]|['"]$'''), '');
+}
+
+/// Implements `arabize extract [path] [--format text|json] [--write]`.
 ///
 /// Prints the hardcoded strings under `lib` in [path] (or [path] itself when
-/// it is a file). Returns 0, or 64 on bad arguments.
+/// it is a file). With `--write` the strings are also merged into the
+/// template ARB file. Returns 0, or 64 on bad arguments.
 Future<int> runExtract(List<String> args, void Function(String) out) async {
   var path = '.';
   var format = 'text';
+  var write = false;
+  String? arbOption;
   for (var i = 0; i < args.length; i++) {
     final arg = args[i];
-    if (arg == '--format' && i + 1 < args.length) {
+    if (arg == '--write') {
+      write = true;
+    } else if (arg == '--arb' && i + 1 < args.length) {
+      arbOption = args[++i];
+    } else if (arg.startsWith('--arb=')) {
+      arbOption = arg.substring('--arb='.length);
+    } else if (arg == '--format' && i + 1 < args.length) {
       format = args[++i];
     } else if (arg.startsWith('--format=')) {
       format = arg.substring('--format='.length);
@@ -211,6 +246,20 @@ Future<int> runExtract(List<String> args, void Function(String) out) async {
       strings.isEmpty
           ? 'No hardcoded strings found.'
           : '${strings.length} string${strings.length == 1 ? '' : 's'} found.',
+    );
+  }
+
+  if (write && strings.isNotEmpty) {
+    final arbFile = File(arbOption ?? arbPathFor(path));
+    final merged = mergeArb(
+      arbFile.existsSync() ? arbFile.readAsStringSync() : null,
+      strings,
+    );
+    arbFile.parent.createSync(recursive: true);
+    arbFile.writeAsStringSync(merged.content);
+    out(
+      'Added ${merged.added.length} '
+      'key${merged.added.length == 1 ? '' : 's'} to ${p.relative(arbFile.path)}.',
     );
   }
   return 0;

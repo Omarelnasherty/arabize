@@ -5,6 +5,7 @@ import 'src/check.dart';
 import 'src/extract.dart';
 import 'src/fix.dart';
 
+export 'src/arb.dart' show ArbEntry, keyFor, mergeArb, toIcu;
 export 'src/check.dart' show AnalyzeRunner, runCheck;
 export 'src/extract.dart' show ExtractedString, findStrings, runExtract;
 export 'src/fix.dart' show runFix;
@@ -19,7 +20,9 @@ Usage: arabize <command>
 Commands:
   check [path] [--format text|json]   Report RTL issues, exit 1 if any.
   fix [path] [--dry-run]              Apply the fixes, or print a diff.
-  extract [path] [--format text|json] List hardcoded user-facing strings.
+  extract [path] [--format text|json] [--write] [--arb file]
+                                      List hardcoded strings, --write adds
+                                      them to app_en.arb.
   --version                           Print the version.''';
 
 /// Runs the CLI with [args] and returns the exit code.
