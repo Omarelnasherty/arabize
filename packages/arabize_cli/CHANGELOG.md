@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add `arabize extract` to list hardcoded user-facing strings.
+- Add `extract --write` to merge the strings into `app_en.arb` with generated keys.
 
 ## 0.2.0
 

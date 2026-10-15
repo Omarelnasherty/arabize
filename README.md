@@ -65,11 +65,12 @@ dart run arabize_cli:arabize fix --dry-run
 dart run arabize_cli:arabize fix lib
 ```
 
-`arabize extract` lists hardcoded strings in `Text`, `hintText`, `labelText`, `tooltip` and similar arguments under `lib`. It only reads files, nothing is changed.
+`arabize extract` lists hardcoded strings in `Text`, `hintText`, `labelText`, `tooltip` and similar arguments under `lib`. By default it only reads files. With `--write` the strings are added as keys to `lib/l10n/app_en.arb` (or the template file named in `l10n.yaml`), and existing keys are left alone.
 
 ```
 dart run arabize_cli:arabize extract
 dart run arabize_cli:arabize extract --format json
+dart run arabize_cli:arabize extract --write
 ```
 
 ## Development
