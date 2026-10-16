@@ -9,6 +9,8 @@ import 'package:path/path.dart' as p;
 
 import 'arb.dart';
 import 'guards.dart';
+import 'l10n_config.dart';
+import 'replace.dart';
 
 /// Widgets whose first positional argument is shown to the user.
 const _textWidgets = {'Text', 'SelectableText'};
@@ -40,12 +42,20 @@ class ExtractedString {
   /// `Hello $name`.
   final String text;
 
+  /// Offset of the string literal in the source.
+  final int offset;
+
+  /// Length of the string literal in the source.
+  final int length;
+
   const ExtractedString({
     required this.file,
     required this.line,
     required this.column,
     required this.context,
     required this.text,
+    this.offset = 0,
+    this.length = 0,
   });
 
   Map<String, Object> toJson() => {
@@ -60,17 +70,28 @@ class ExtractedString {
 /// Finds the hardcoded user-facing strings in [source].
 ///
 /// Strings without a letter, such as `'/'` or `'12'`, are ignored.
-List<ExtractedString> findStrings(String source, {String file = ''}) {
+List<ExtractedString> findStrings(String source, {String file = ''}) => [
+  for (final f in parseLiterals(source, file: file).literals) f.string,
+];
+
+/// A string found in a source file together with its syntax node.
+typedef FoundLiteral = ({ExtractedString string, StringLiteral node});
+
+/// Parses [source] and returns the unit with the user-facing string literals.
+({CompilationUnit unit, List<FoundLiteral> literals}) parseLiterals(
+  String source, {
+  String file = '',
+}) {
   final result = parseString(content: source, throwIfDiagnostics: false);
   final visitor = _StringVisitor(file, result.lineInfo);
   result.unit.accept(visitor);
-  return visitor.found;
+  return (unit: result.unit, literals: visitor.found);
 }
 
 class _StringVisitor extends RecursiveAstVisitor<void> {
   final String file;
   final LineInfo lineInfo;
-  final found = <ExtractedString>[];
+  final found = <FoundLiteral>[];
 
   _StringVisitor(this.file, this.lineInfo);
 
@@ -110,15 +131,18 @@ class _StringVisitor extends RecursiveAstVisitor<void> {
     final text = _textOf(expression);
     if (!_hasLetter(text)) return;
     final location = lineInfo.getLocation(expression.offset);
-    found.add(
-      ExtractedString(
+    found.add((
+      string: ExtractedString(
         file: file,
         line: location.lineNumber,
         column: location.columnNumber,
         context: context,
         text: text,
+        offset: expression.offset,
+        length: expression.length,
       ),
-    );
+      node: expression,
+    ));
   }
 }
 
@@ -168,39 +192,28 @@ List<File> dartFiles(String path) {
 /// Reads `arb-dir` and `template-arb-file` from `l10n.yaml` when present and
 /// falls back to `lib/l10n/app_en.arb`.
 String arbPathFor(String path) {
-  var dir = 'lib/l10n';
-  var template = 'app_en.arb';
-  final config = File(p.join(path, 'l10n.yaml'));
-  if (config.existsSync()) {
-    final text = config.readAsStringSync();
-    dir = _yamlValue(text, 'arb-dir') ?? dir;
-    template = _yamlValue(text, 'template-arb-file') ?? template;
-  }
-  return p.join(path, dir, template);
+  final config = L10nConfig.read(path);
+  return p.join(path, config.arbDir, config.template);
 }
 
-String? _yamlValue(String yaml, String key) {
-  final match = RegExp(
-    '^$key:'
-    r'\s*(.+?)\s*$',
-    multiLine: true,
-  ).firstMatch(yaml);
-  return match?.group(1)?.replaceAll(RegExp(r'''^['"]|['"]$'''), '');
-}
-
-/// Implements `arabize extract [path] [--format text|json] [--write]`.
+/// Implements `arabize extract [path] [--format text|json] [--write] [--replace]`.
 ///
 /// Prints the hardcoded strings under `lib` in [path] (or [path] itself when
 /// it is a file). With `--write` the strings are also merged into the
-/// template ARB file. Returns 0, or 64 on bad arguments.
+/// template ARB file, and with `--replace` the strings in the code are
+/// replaced with the generated getters. Returns 0, or 64 on bad arguments.
 Future<int> runExtract(List<String> args, void Function(String) out) async {
   var path = '.';
   var format = 'text';
   var write = false;
+  var replace = false;
   String? arbOption;
   for (var i = 0; i < args.length; i++) {
     final arg = args[i];
     if (arg == '--write') {
+      write = true;
+    } else if (arg == '--replace') {
+      replace = true;
       write = true;
     } else if (arg == '--arb' && i + 1 < args.length) {
       arbOption = args[++i];
@@ -224,8 +237,21 @@ Future<int> runExtract(List<String> args, void Function(String) out) async {
 
   final lib = p.join(path, 'lib');
   final root = Directory(lib).existsSync() ? lib : path;
+  final config = L10nConfig.read(path);
+  String? importUri;
+  if (replace) {
+    importUri = _importUri(path, config);
+    if (importUri == null) {
+      out(
+        '--replace needs a Flutter project with a pubspec.yaml and the '
+        'generated localizations under lib.',
+      );
+      return 64;
+    }
+  }
   final strings = <ExtractedString>[];
-  for (final file in dartFiles(root)) {
+  final files = dartFiles(root);
+  for (final file in files) {
     strings.addAll(findStrings(file.readAsStringSync(), file: file.path));
   }
 
@@ -261,8 +287,49 @@ Future<int> runExtract(List<String> args, void Function(String) out) async {
       'Added ${merged.added.length} '
       'key${merged.added.length == 1 ? '' : 's'} to ${p.relative(arbFile.path)}.',
     );
+    if (replace) {
+      var replaced = 0;
+      for (final file in files) {
+        if (p
+            .basename(file.path)
+            .startsWith(p.basenameWithoutExtension(config.outputFile))) {
+          continue;
+        }
+        final result = replaceStrings(
+          file.readAsStringSync(),
+          keys: merged.keys,
+          config: config,
+          importUri: importUri!,
+          file: file.path,
+        );
+        if (result.replaced > 0) file.writeAsStringSync(result.source);
+        replaced += result.replaced;
+        for (final s in result.skipped) {
+          out(
+            '${p.relative(s.file)}:${s.line}:${s.column}  skipped '
+            '(no context in scope, const, or complex interpolation)',
+          );
+        }
+      }
+      out('Replaced $replaced string${replaced == 1 ? '' : 's'}.');
+    }
   }
   return 0;
+}
+
+/// The import for the generated localizations class, or null when it cannot
+/// be written as a package import.
+String? _importUri(String path, L10nConfig config) {
+  final pubspec = File(p.join(path, 'pubspec.yaml'));
+  if (!pubspec.existsSync()) return null;
+  final name = RegExp(
+    r'^name:\s*(\w+)',
+    multiLine: true,
+  ).firstMatch(pubspec.readAsStringSync())?.group(1);
+  final dir = p.posix.normalize(config.arbDir);
+  if (name == null || !p.posix.isWithin('lib', dir)) return null;
+  return 'package:$name/${p.posix.relative(dir, from: 'lib')}/'
+      '${config.outputFile}';
 }
 
 // Argument node types differ between analyzer 13 and 14, so these helpers

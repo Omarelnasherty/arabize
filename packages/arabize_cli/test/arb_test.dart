@@ -70,7 +70,7 @@ void main() {
       final merged = mergeArb(null, strings([r'Hi $name']));
       expect(jsonDecode(merged.content)['@hi'], {
         'placeholders': {
-          'name': {'type': 'String'},
+          'name': {'type': 'Object'},
         },
       });
     });

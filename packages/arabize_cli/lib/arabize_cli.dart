@@ -20,9 +20,10 @@ Usage: arabize <command>
 Commands:
   check [path] [--format text|json]   Report RTL issues, exit 1 if any.
   fix [path] [--dry-run]              Apply the fixes, or print a diff.
-  extract [path] [--format text|json] [--write] [--arb file]
+  extract [path] [--format text|json] [--write] [--replace] [--arb file]
                                       List hardcoded strings, --write adds
-                                      them to app_en.arb.
+                                      them to app_en.arb, --replace also
+                                      swaps them for l10n getters.
   --version                           Print the version.''';
 
 /// Runs the CLI with [args] and returns the exit code.

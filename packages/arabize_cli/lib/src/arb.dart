@@ -20,26 +20,45 @@ final _interpolation = RegExp(r'\$\{([^}]*)\}|\$(\w+)');
 /// Converts [text], as returned by [findStrings], to an ICU message.
 ///
 /// Interpolations become placeholders named after the last identifier in the
-/// expression, so `${items.length}` becomes `{length}`.
-({String message, List<String> placeholders}) toIcu(String text) {
+/// expression, so `${items.length}` becomes `{length}`. `expressions` holds
+/// the source of each placeholder. Two different expressions with the same
+/// name get a numeric suffix.
+({String message, List<String> placeholders, List<String> expressions}) toIcu(
+  String text,
+) {
   final names = <String>[];
+  final expressions = <String>[];
   final buffer = StringBuffer();
   var last = 0;
   for (final match in _interpolation.allMatches(text)) {
     buffer.write(_escape(text.substring(last, match.start)));
     last = match.end;
-    final name = _placeholderName(match.group(1) ?? match.group(2)!, names);
-    if (!names.contains(name)) names.add(name);
-    buffer.write('{$name}');
+    final expression = (match.group(1) ?? match.group(2)!).trim();
+    var index = expressions.indexOf(expression);
+    if (index == -1) {
+      final base = _placeholderName(expression);
+      var name = base;
+      for (var i = 2; names.contains(name); i++) {
+        name = '$base$i';
+      }
+      names.add(name);
+      expressions.add(expression);
+      index = names.length - 1;
+    }
+    buffer.write('{${names[index]}}');
   }
   buffer.write(_escape(text.substring(last)));
-  return (message: buffer.toString(), placeholders: names);
+  return (
+    message: buffer.toString(),
+    placeholders: names,
+    expressions: expressions,
+  );
 }
 
 String _escape(String s) =>
     s.replaceAll("'", "''").replaceAll('{', "'{'").replaceAll('}', "'}'");
 
-String _placeholderName(String expression, List<String> taken) {
+String _placeholderName(String expression) {
   final identifiers = RegExp(r'[A-Za-z_]\w*').allMatches(expression);
   var name = identifiers.isEmpty ? 'value' : identifiers.last.group(0)!;
   name = name.replaceAll('_', '');
@@ -66,10 +85,12 @@ String keyFor(String text, {String fallback = 'text'}) {
 /// Merges [strings] into the ARB file content [existing] and returns the new
 /// content together with the entries that were added.
 ///
+/// `keys` maps every message of [strings] to its key, new or existing.
+///
 /// A string whose message already exists keeps its key. New keys that clash
 /// with an existing one get a numeric suffix. Existing entries are never
 /// changed.
-({String content, List<ArbEntry> added}) mergeArb(
+({String content, List<ArbEntry> added, Map<String, String> keys}) mergeArb(
   String? existing,
   List<ExtractedString> strings,
 ) {
@@ -93,7 +114,7 @@ String keyFor(String text, {String fallback = 'text'}) {
     if (icu.placeholders.isNotEmpty) {
       arb['@$key'] = {
         'placeholders': {
-          for (final name in icu.placeholders) name: {'type': 'String'},
+          for (final name in icu.placeholders) name: {'type': 'Object'},
         },
       };
     }
@@ -103,5 +124,9 @@ String keyFor(String text, {String fallback = 'text'}) {
   return (
     content: '${const JsonEncoder.withIndent('  ').convert(arb)}\n',
     added: added,
+    keys: {
+      for (final s in strings)
+        toIcu(s.text).message: byMessage[toIcu(s.text).message]!,
+    },
   );
 }
