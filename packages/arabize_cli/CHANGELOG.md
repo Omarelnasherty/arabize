@@ -4,6 +4,7 @@
 
 - Add `arabize extract` to list hardcoded user-facing strings.
 - Add `extract --write` to merge the strings into `app_en.arb` with generated keys.
+- Add `extract --replace` to swap the strings in code for `AppLocalizations` getters. Interpolations become placeholders of type `Object`.
 
 ## 0.2.0
 

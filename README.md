@@ -67,10 +67,13 @@ dart run arabize_cli:arabize fix lib
 
 `arabize extract` lists hardcoded strings in `Text`, `hintText`, `labelText`, `tooltip` and similar arguments under `lib`. By default it only reads files. With `--write` the strings are added as keys to `lib/l10n/app_en.arb` (or the template file named in `l10n.yaml`), and existing keys are left alone.
 
+`--replace` also rewrites the code, so `Text('Hello $name')` becomes `Text(AppLocalizations.of(context)!.hello(name))` and the import is added. The class name, the output file and `nullable-getter` come from `l10n.yaml`. Strings are left alone when there is no `context` in scope or they sit in a constant that cannot lose `const`; those are listed in the output.
+
 ```
 dart run arabize_cli:arabize extract
 dart run arabize_cli:arabize extract --format json
 dart run arabize_cli:arabize extract --write
+dart run arabize_cli:arabize extract --replace
 ```
 
 ## Development
