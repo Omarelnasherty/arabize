@@ -25,7 +25,7 @@ One small step at a time. Checked items are done.
 - [x] `arabize extract`: find hardcoded user-facing strings (Text, hintText, labelText, tooltip, SnackBar content, ...)
 - [x] Generate ARB keys and merge them into the existing app_en.arb
 - [x] Replace strings in code with l10n getters, turn interpolation into placeholders
-- [ ] `arabize l10n-check`: missing keys, unused keys, placeholder mismatches
+- [x] `arabize l10n-check`: missing keys, unused keys, placeholder mismatches
 - [ ] Prepare 0.3.0
 
 ## 0.4 Translation
