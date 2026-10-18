@@ -15,7 +15,7 @@ export 'src/l10n_check.dart'
 export 'src/finding.dart' show Finding, arabizeRules, parseAnalyzeOutput;
 
 /// The package version.
-const String arabizeCliVersion = '0.2.0';
+const String arabizeCliVersion = '0.3.0';
 
 const _usage = '''
 Usage: arabize <command>

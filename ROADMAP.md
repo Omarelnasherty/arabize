@@ -26,7 +26,7 @@ One small step at a time. Checked items are done.
 - [x] Generate ARB keys and merge them into the existing app_en.arb
 - [x] Replace strings in code with l10n getters, turn interpolation into placeholders
 - [x] `arabize l10n-check`: missing keys, unused keys, placeholder mismatches
-- [ ] Prepare 0.3.0
+- [x] Prepare 0.3.0
 
 ## 0.4 Translation
 - [ ] `arabize translate`: provider interface with OpenAI, Gemini and Anthropic providers, API key from env
