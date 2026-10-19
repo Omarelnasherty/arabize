@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `arabize translate` with Anthropic, OpenAI and Gemini providers. It adds the messages a target ARB file lacks. The API key comes from `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY`.
+
 ## 0.3.0
 
 - Add `arabize extract` to list hardcoded user-facing strings.
