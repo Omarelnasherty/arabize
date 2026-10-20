@@ -180,5 +180,74 @@ void main() {
       expect(code, 1);
       expect(lines.single, startsWith('Translation failed'));
     });
+
+    test('retries a message that lost a placeholder', () async {
+      File(
+        p.join(dir.path, 'lib', 'l10n', 'app_en.arb'),
+      ).writeAsStringSync(jsonEncode({'hi': 'Hi {name}'}));
+      var calls = 0;
+      final code = await runTranslate(
+        ['--to', 'ar', dir.path],
+        lines.add,
+        environment: {'OPENAI_API_KEY': 'k'},
+        post: (u, h, b) async =>
+            reply({'hi': ++calls == 1 ? 'مرحبا' : 'مرحبا {name}'}),
+      );
+      expect(code, 0);
+      expect(calls, 2);
+    });
+
+    test('skips a message that never passes', () async {
+      File(
+        p.join(dir.path, 'lib', 'l10n', 'app_en.arb'),
+      ).writeAsStringSync(jsonEncode({'hi': 'Hi {name}', 'ok': 'Ok'}));
+      final code = await runTranslate(
+        ['--to', 'ar', dir.path],
+        lines.add,
+        environment: {'OPENAI_API_KEY': 'k'},
+        post: (u, h, b) async => reply({'hi': 'مرحبا', 'ok': 'حسنا'}),
+      );
+      expect(code, 1);
+      final written = jsonDecode(
+        File(p.join(dir.path, 'lib', 'l10n', 'app_ar.arb')).readAsStringSync(),
+      );
+      expect(written, {'@@locale': 'ar', 'ok': 'حسنا'});
+      expect(lines.first, startsWith('Skipped hi'));
+    });
+  });
+
+  group('validateTranslation', () {
+    const plural = '{n, plural, one{1 item} other{{n} items}}';
+
+    test('accepts a kept placeholder', () {
+      expect(validateTranslation('Hi {name}', 'مرحبا {name}'), isNull);
+    });
+
+    test('rejects a changed placeholder name', () {
+      expect(validateTranslation('Hi {name}', 'مرحبا {اسم}'), isNotNull);
+    });
+
+    test('accepts other plural categories', () {
+      const ar =
+          '{n, plural, zero{لا شيء} one{واحد} two{اثنان} few{{n} أشياء} '
+          'many{{n} شيئا} other{{n} شيء}}';
+      expect(validateTranslation(plural, ar), isNull);
+    });
+
+    test('rejects a dropped plural', () {
+      expect(validateTranslation(plural, '{n} عناصر'), isNotNull);
+    });
+
+    test('rejects a plural without other', () {
+      expect(
+        validateTranslation(plural, '{n, plural, one{واحد} few{{n} عناصر}}'),
+        'missing "other" case',
+      );
+    });
+
+    test('rejects unbalanced braces and empty text', () {
+      expect(validateTranslation('Hi {name}', 'مرحبا {name'), isNotNull);
+      expect(validateTranslation('Hi', ' '), 'empty');
+    });
   });
 }

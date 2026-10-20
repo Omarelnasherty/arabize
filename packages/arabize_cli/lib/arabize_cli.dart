@@ -22,7 +22,9 @@ export 'src/translate.dart'
         TranslationProvider,
         createProvider,
         mergeTranslations,
-        runTranslate;
+        runTranslate,
+        translateValidated,
+        validateTranslation;
 export 'src/finding.dart' show Finding, arabizeRules, parseAnalyzeOutput;
 
 /// The package version.

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import 'l10n_check.dart';
 import 'l10n_config.dart';
 
 /// Sends an HTTP POST and returns the response body.
@@ -211,6 +212,75 @@ TranslationProvider? createProvider(
   _ => null,
 };
 
+final _icuBlock = RegExp(r'\{\s*(\w+)\s*,\s*(plural|select|selectordinal)\s*,');
+
+/// Returns what is wrong with [translated] compared to [source], or null if
+/// it keeps the placeholders and the plural and select structure.
+String? validateTranslation(String source, String translated) {
+  if (translated.trim().isEmpty) return 'empty';
+  final plain = translated
+      .replaceAll("''", '')
+      .replaceAll(RegExp("'[{}]'"), '');
+  var depth = 0;
+  for (final c in plain.split('')) {
+    if (c == '{') depth++;
+    if (c == '}') depth--;
+    if (depth < 0) break;
+  }
+  if (depth != 0) return 'unbalanced braces';
+
+  final expected = icuPlaceholders(source);
+  final actual = icuPlaceholders(translated);
+  if (expected.length != actual.length || !expected.containsAll(actual)) {
+    return 'placeholders {${actual.join(', ')}} instead of '
+        '{${expected.join(', ')}}';
+  }
+  List<String> blocks(String m) =>
+      (_icuBlock.allMatches(m).map((x) => '${x[1]},${x[2]}').toList()..sort());
+  final want = blocks(source);
+  final got = blocks(translated);
+  if (want.join(';') != got.join(';')) return 'plural or select changed';
+  if (want.isNotEmpty && !RegExp(r'\bother\s*\{').hasMatch(translated)) {
+    return 'missing "other" case';
+  }
+  return null;
+}
+
+/// Translates [todo] with [provider] and checks each message with
+/// [validateTranslation]. Messages that fail are sent again, up to
+/// [attempts] times in total.
+///
+/// Returns the valid translations and the reason for each message that
+/// never passed.
+Future<({Map<String, String> ok, Map<String, String> failed})>
+translateValidated(
+  TranslationProvider provider,
+  Map<String, String> todo,
+  String target, {
+  int attempts = 3,
+}) async {
+  final ok = <String, String>{};
+  var pending = todo;
+  final failed = <String, String>{};
+  for (var i = 0; i < attempts && pending.isNotEmpty; i++) {
+    final reply = await provider.translate(pending, target);
+    failed.clear();
+    for (final e in pending.entries) {
+      final text = reply[e.key];
+      final problem = text == null
+          ? 'missing in reply'
+          : validateTranslation(e.value, text);
+      if (problem == null) {
+        ok[e.key] = text!;
+      } else {
+        failed[e.key] = problem;
+      }
+    }
+    pending = {for (final k in failed.keys) k: todo[k]!};
+  }
+  return (ok: ok, failed: failed);
+}
+
 /// Returns the content of [existing] with the translated [added] messages.
 ///
 /// A missing [existing] file starts a new one with `@@locale` set.
@@ -231,7 +301,9 @@ String mergeTranslations(
 ///
 /// Translates the template messages that the target ARB file does not have
 /// yet and adds them to it. The API key comes from `ANTHROPIC_API_KEY`,
-/// `OPENAI_API_KEY` or `GEMINI_API_KEY`. Returns 64 on bad arguments or a
+/// `OPENAI_API_KEY` or `GEMINI_API_KEY`. Messages that lose a placeholder or
+/// change a plural or select are sent again up to three times, then skipped.
+/// Returns 64 on bad arguments or a
 /// missing key and 1 when the provider fails.
 Future<int> runTranslate(
   List<String> args,
@@ -319,20 +391,24 @@ Future<int> runTranslate(
     return 0;
   }
 
-  final Map<String, String> translated;
+  final Map<String, String> added;
+  final Map<String, String> failed;
   try {
-    translated = await provider.translate(todo, to);
+    final result = await translateValidated(provider, todo, to);
+    added = result.ok;
+    failed = result.failed;
   } on Object catch (e) {
     out('Translation failed: $e');
     return 1;
   }
-  final added = {
-    for (final k in todo.keys)
-      if (translated[k] != null) k: translated[k]!,
-  };
-  targetFile.writeAsStringSync(mergeTranslations(existing, added, to));
+  if (added.isNotEmpty) {
+    targetFile.writeAsStringSync(mergeTranslations(existing, added, to));
+  }
+  for (final e in failed.entries) {
+    out('Skipped ${e.key}: ${e.value}');
+  }
   out(
     'Translated ${added.length} of ${todo.length} messages to ${targetFile.path}.',
   );
-  return added.length == todo.length ? 0 : 1;
+  return failed.isEmpty ? 0 : 1;
 }
