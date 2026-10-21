@@ -25,12 +25,17 @@ abstract class TranslationProvider {
   });
 }
 
-String _prompt(String target, TranslateConfig config) =>
-    'Translate the values of the JSON object the user sends from English to '
-            'the language with code "$target". Keep the keys. Keep ICU placeholders '
-            'such as {name} and plural or select syntax unchanged. Answer with the '
-            'JSON object only. ${config.instructions}'
-        .trimRight();
+String _prompt(String target, TranslateConfig config) {
+  const base =
+      'Translate the values of the JSON object the user sends from English to '
+      'the language with code "%s". Keep the keys. Keep ICU placeholders '
+      'such as {name} and plural or select syntax unchanged. Answer with the '
+      'JSON object only.';
+  return [
+    base.replaceFirst('%s', target),
+    config.instructions,
+  ].join(' ').trim();
+}
 
 Map<String, String> _parseReply(String text) {
   var s = text.trim();
