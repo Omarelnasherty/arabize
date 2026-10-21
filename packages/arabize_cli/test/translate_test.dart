@@ -6,6 +6,37 @@ import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
 void main() {
+  group('TranslateConfig', () {
+    test('defaults give no instructions', () {
+      expect(const TranslateConfig().instructions, isEmpty);
+      expect(TranslateConfig.parse('').instructions, isEmpty);
+    });
+
+    test('parses tone, glossary and do-not-translate', () {
+      final config = TranslateConfig.parse('''
+tone: msa
+glossary:
+  Cart: عربة التسوق
+do-not-translate: [Arabize, Pro]
+''');
+      expect(config.tone, 'msa');
+      expect(config.glossary, {'Cart': 'عربة التسوق'});
+      expect(config.doNotTranslate, ['Arabize', 'Pro']);
+      expect(config.instructions, contains('Modern Standard Arabic'));
+    });
+
+    test('rejects wrong shapes', () {
+      expect(
+        () => TranslateConfig.parse('glossary: [a]'),
+        throwsFormatException,
+      );
+      expect(
+        () => TranslateConfig.parse('do-not-translate: a'),
+        throwsFormatException,
+      );
+    });
+  });
+
   group('providers', () {
     final messages = {'hello': 'Hello {name}'};
     final translated = jsonEncode({'hello': 'مرحبا {name}'});
@@ -141,6 +172,38 @@ void main() {
         'save': 'حفظ',
         'cancel': 'إلغاء',
       });
+    });
+
+    test('sends the arabize.yaml instructions to the provider', () async {
+      File(p.join(dir.path, 'arabize.yaml')).writeAsStringSync(
+        'tone: egyptian\ndo-not-translate:\n  - Arabize\n'
+        'glossary:\n  Cart: عربة\n',
+      );
+      late String body;
+      final code = await runTranslate(
+        ['--to', 'ar', dir.path],
+        lines.add,
+        environment: {'OPENAI_API_KEY': 'k'},
+        post: (u, h, b) async {
+          body = b;
+          return reply({'save': 'حفظ', 'cancel': 'إلغاء'});
+        },
+      );
+      expect(code, 0);
+      expect(body, contains('Egyptian Arabic'));
+      expect(body, contains('Never translate these terms: Arabize'));
+      expect(body, contains('\\"Cart\\" as \\"عربة\\"'));
+    });
+
+    test('rejects an invalid arabize.yaml', () async {
+      File(p.join(dir.path, 'arabize.yaml')).writeAsStringSync('tone: slang');
+      final code = await runTranslate(
+        ['--to', 'ar', dir.path],
+        lines.add,
+        environment: {'OPENAI_API_KEY': 'k'},
+      );
+      expect(code, 64);
+      expect(lines.single, contains('tone must be msa or egyptian'));
     });
 
     test('says so when nothing is missing', () async {

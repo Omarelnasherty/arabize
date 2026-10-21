@@ -25,6 +25,7 @@ export 'src/translate.dart'
         runTranslate,
         translateValidated,
         validateTranslation;
+export 'src/translate_config.dart' show TranslateConfig;
 export 'src/finding.dart' show Finding, arabizeRules, parseAnalyzeOutput;
 
 /// The package version.

@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 
 import 'l10n_check.dart';
 import 'l10n_config.dart';
+import 'translate_config.dart';
 
 /// Sends an HTTP POST and returns the response body.
 typedef HttpPost =
@@ -19,15 +20,17 @@ abstract class TranslationProvider {
   /// the translated map with the same keys.
   Future<Map<String, String>> translate(
     Map<String, String> messages,
-    String target,
-  );
+    String target, {
+    TranslateConfig config = const TranslateConfig(),
+  });
 }
 
-String _prompt(String target) =>
+String _prompt(String target, TranslateConfig config) =>
     'Translate the values of the JSON object the user sends from English to '
-    'the language with code "$target". Keep the keys. Keep ICU placeholders '
-    'such as {name} and plural or select syntax unchanged. Answer with the '
-    'JSON object only.';
+            'the language with code "$target". Keep the keys. Keep ICU placeholders '
+            'such as {name} and plural or select syntax unchanged. Answer with the '
+            'JSON object only. ${config.instructions}'
+        .trimRight();
 
 Map<String, String> _parseReply(String text) {
   var s = text.trim();
@@ -79,8 +82,9 @@ class AnthropicProvider implements TranslationProvider {
   @override
   Future<Map<String, String>> translate(
     Map<String, String> messages,
-    String target,
-  ) async {
+    String target, {
+    TranslateConfig config = const TranslateConfig(),
+  }) async {
     final reply = await _post(
       Uri.parse('https://api.anthropic.com/v1/messages'),
       {
@@ -91,7 +95,7 @@ class AnthropicProvider implements TranslationProvider {
       jsonEncode({
         'model': model,
         'max_tokens': 8192,
-        'system': _prompt(target),
+        'system': _prompt(target, config),
         'messages': [
           {'role': 'user', 'content': jsonEncode(messages)},
         ],
@@ -117,8 +121,9 @@ class OpenAiProvider implements TranslationProvider {
   @override
   Future<Map<String, String>> translate(
     Map<String, String> messages,
-    String target,
-  ) async {
+    String target, {
+    TranslateConfig config = const TranslateConfig(),
+  }) async {
     final reply = await _post(
       Uri.parse('https://api.openai.com/v1/chat/completions'),
       {'authorization': 'Bearer $apiKey', 'content-type': 'application/json'},
@@ -126,7 +131,7 @@ class OpenAiProvider implements TranslationProvider {
         'model': model,
         'response_format': {'type': 'json_object'},
         'messages': [
-          {'role': 'system', 'content': _prompt(target)},
+          {'role': 'system', 'content': _prompt(target, config)},
           {'role': 'user', 'content': jsonEncode(messages)},
         ],
       }),
@@ -152,8 +157,9 @@ class GeminiProvider implements TranslationProvider {
   @override
   Future<Map<String, String>> translate(
     Map<String, String> messages,
-    String target,
-  ) async {
+    String target, {
+    TranslateConfig config = const TranslateConfig(),
+  }) async {
     final reply = await _post(
       Uri.parse(
         'https://generativelanguage.googleapis.com/v1beta/models/'
@@ -163,7 +169,7 @@ class GeminiProvider implements TranslationProvider {
       jsonEncode({
         'systemInstruction': {
           'parts': [
-            {'text': _prompt(target)},
+            {'text': _prompt(target, config)},
           ],
         },
         'contents': [
@@ -258,12 +264,13 @@ translateValidated(
   Map<String, String> todo,
   String target, {
   int attempts = 3,
+  TranslateConfig config = const TranslateConfig(),
 }) async {
   final ok = <String, String>{};
   var pending = todo;
   final failed = <String, String>{};
   for (var i = 0; i < attempts && pending.isNotEmpty; i++) {
-    final reply = await provider.translate(pending, target);
+    final reply = await provider.translate(pending, target, config: config);
     failed.clear();
     for (final e in pending.entries) {
       final text = reply[e.key];
@@ -358,6 +365,13 @@ Future<int> runTranslate(
     post: post,
   )!;
 
+  final TranslateConfig settings;
+  try {
+    settings = TranslateConfig.read(path);
+  } on FormatException catch (e) {
+    out('Invalid arabize.yaml: ${e.message}');
+    return 64;
+  }
   final config = L10nConfig.read(path);
   final dir = p.join(path, config.arbDir);
   final templateFile = File(p.join(dir, config.template));
@@ -394,7 +408,12 @@ Future<int> runTranslate(
   final Map<String, String> added;
   final Map<String, String> failed;
   try {
-    final result = await translateValidated(provider, todo, to);
+    final result = await translateValidated(
+      provider,
+      todo,
+      to,
+      config: settings,
+    );
     added = result.ok;
     failed = result.failed;
   } on Object catch (e) {
