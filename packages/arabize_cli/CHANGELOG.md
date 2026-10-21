@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `translate` reads `arabize.yaml` for a tone (`msa` or `egyptian`), a glossary and a do-not-translate list.
 - Add `arabize translate` with Anthropic, OpenAI and Gemini providers. It adds the messages a target ARB file lacks. The API key comes from `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY`.
 - `translate` checks that each message keeps its placeholders and plural or select structure, sends failing messages again up to three times and skips the ones that still fail.
 
