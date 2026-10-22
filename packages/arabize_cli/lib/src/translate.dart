@@ -308,11 +308,34 @@ String mergeTranslations(
   return '${const JsonEncoder.withIndent('  ').convert(json)}\n';
 }
 
+/// File in the ARB directory that remembers the source text of each
+/// translated message, per locale.
+const translationLockFile = '.arabize_translations.json';
+
+/// Returns the template messages in [template] that need a translation.
+///
+/// These are the messages missing from [have] and the ones whose source text
+/// differs from what [recorded] says was translated. A message that is in
+/// [have] but not in [recorded] counts as up to date.
+Map<String, String> pendingMessages(
+  Map<Object?, Object?> template,
+  Set<String> have,
+  Map<String, String> recorded,
+) => {
+  for (final e in template.entries)
+    if (!(e.key as String).startsWith('@') &&
+        e.value is String &&
+        (!have.contains(e.key) ||
+            (recorded[e.key] != null && recorded[e.key] != e.value)))
+      e.key as String: e.value as String,
+};
+
 /// Implements `arabize translate --to locale [path] [--provider name]
 /// [--model id]`.
 ///
 /// Translates the template messages that the target ARB file does not have
-/// yet and adds them to it. The API key comes from `ANTHROPIC_API_KEY`,
+/// yet or whose source text changed since the last run, and adds them to it.
+/// The source texts are remembered in [translationLockFile]. The API key comes from `ANTHROPIC_API_KEY`,
 /// `OPENAI_API_KEY` or `GEMINI_API_KEY`. Messages that lose a placeholder or
 /// change a plural or select are sent again up to three times, then skipped.
 /// Returns 64 on bad arguments or a
@@ -398,14 +421,36 @@ Future<int> runTranslate(
       : (jsonDecode(existing) as Map).keys.cast<String>().toSet();
 
   final template = jsonDecode(templateFile.readAsStringSync()) as Map;
-  final todo = {
-    for (final e in template.entries)
-      if (!(e.key as String).startsWith('@') &&
-          e.value is String &&
-          !have.contains(e.key))
-        e.key as String: e.value as String,
-  };
+  final lockFile = File(p.join(dir, translationLockFile));
+  final lock = lockFile.existsSync()
+      ? Map<String, Object?>.from(
+          jsonDecode(lockFile.readAsStringSync()) as Map,
+        )
+      : <String, Object?>{};
+  final recorded = Map<String, String>.from(
+    (lock[to] as Map?)?.cast<String, String>() ?? const <String, String>{},
+  );
+  final todo = pendingMessages(template, have, recorded);
+
+  void saveLock(Map<String, String> translated) {
+    final next = <String, String>{
+      for (final e in template.entries)
+        if (e.value is String && !(e.key as String).startsWith('@'))
+          if (translated.containsKey(e.key) ||
+              (have.contains(e.key) && !todo.containsKey(e.key)))
+            e.key as String: translated.containsKey(e.key)
+                ? e.value as String
+                : (recorded[e.key] ?? e.value as String),
+    };
+    if (jsonEncode(next) == jsonEncode(recorded)) return;
+    lock[to!] = next;
+    lockFile.writeAsStringSync(
+      '${const JsonEncoder.withIndent('  ').convert(lock)}\n',
+    );
+  }
+
   if (todo.isEmpty) {
+    saveLock(const {});
     out('Nothing to translate for $to.');
     return 0;
   }
@@ -428,6 +473,7 @@ Future<int> runTranslate(
   if (added.isNotEmpty) {
     targetFile.writeAsStringSync(mergeTranslations(existing, added, to));
   }
+  saveLock(added);
   for (final e in failed.entries) {
     out('Skipped ${e.key}: ${e.value}');
   }

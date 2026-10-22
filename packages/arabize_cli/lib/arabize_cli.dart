@@ -22,8 +22,10 @@ export 'src/translate.dart'
         TranslationProvider,
         createProvider,
         mergeTranslations,
+        pendingMessages,
         runTranslate,
         translateValidated,
+        translationLockFile,
         validateTranslation;
 export 'src/translate_config.dart' show TranslateConfig;
 export 'src/finding.dart' show Finding, arabizeRules, parseAnalyzeOutput;

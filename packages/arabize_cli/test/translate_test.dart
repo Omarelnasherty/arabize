@@ -151,6 +151,59 @@ do-not-translate: [Arabize, Pro]
       ],
     });
 
+    test('translates a message again when its source text changed', () async {
+      final l10n = p.join(dir.path, 'lib', 'l10n');
+      File(p.join(l10n, 'app_ar.arb')).writeAsStringSync(
+        '{"@@locale": "ar", "save": "حفظ", "cancel": "إلغاء"}',
+      );
+      File(p.join(l10n, translationLockFile)).writeAsStringSync(
+        jsonEncode({
+          'ar': {'save': 'Save', 'cancel': 'Dismiss'},
+        }),
+      );
+      late String body;
+      final code = await runTranslate(
+        ['--to', 'ar', dir.path],
+        lines.add,
+        environment: {'OPENAI_API_KEY': 'k'},
+        post: (u, h, b) async {
+          body = b;
+          return reply({'cancel': 'ألغِ'});
+        },
+      );
+      expect(code, 0);
+      expect(body, contains('Cancel'));
+      expect(body, isNot(contains('Save')));
+      final ar = jsonDecode(
+        File(p.join(l10n, 'app_ar.arb')).readAsStringSync(),
+      );
+      expect(ar['cancel'], 'ألغِ');
+      expect(ar['save'], 'حفظ');
+      final lock = jsonDecode(
+        File(p.join(l10n, translationLockFile)).readAsStringSync(),
+      );
+      expect(lock['ar'], {'save': 'Save', 'cancel': 'Cancel'});
+    });
+
+    test('records sources and then finds nothing to do', () async {
+      var calls = 0;
+      Future<String> post(Uri u, Map<String, String> h, String b) async {
+        calls++;
+        return reply({'save': 'حفظ', 'cancel': 'إلغاء'});
+      }
+
+      for (var i = 0; i < 2; i++) {
+        await runTranslate(
+          ['--to', 'ar', dir.path],
+          lines.add,
+          environment: {'OPENAI_API_KEY': 'k'},
+          post: post,
+        );
+      }
+      expect(calls, 1);
+      expect(lines.last, 'Nothing to translate for ar.');
+    });
+
     test('translates only the missing keys', () async {
       final target = File(p.join(dir.path, 'lib', 'l10n', 'app_ar.arb'))
         ..writeAsStringSync('{"@@locale": "ar", "save": "حفظ"}');
@@ -276,6 +329,17 @@ do-not-translate: [Arabize, Pro]
       );
       expect(written, {'@@locale': 'ar', 'ok': 'حسنا'});
       expect(lines.first, startsWith('Skipped hi'));
+    });
+  });
+
+  group('pendingMessages', () {
+    test('picks missing and changed messages', () {
+      final todo = pendingMessages(
+        {'@@locale': 'en', 'a': 'A', 'b': 'B2', 'c': 'C', 'd': 'D'},
+        {'a', 'b', 'c'},
+        {'a': 'A', 'b': 'B'},
+      );
+      expect(todo, {'b': 'B2', 'd': 'D'});
     });
   });
 
