@@ -78,7 +78,7 @@ dart run arabize_cli:arabize extract --replace
 
 `arabize l10n-check` compares the ARB files in the folder from `l10n.yaml`. It reports keys missing from a translation, keys a translation has but the template does not, template keys the code never uses, and messages whose placeholders differ from the template. It exits with 1 when it finds something, so it can run in CI. Use `--format json` for machine output.
 
-`arabize translate` fills the target ARB file with the messages it lacks, using the template file as the source. The key is read from `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY`; `--provider` picks one when several are set and `--model` overrides the default model.
+`arabize translate` fills the target ARB file with the messages it lacks, using the template file as the source. The key is read from `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY`; `--provider` picks one when several are set and `--model` overrides the default model. Messages whose English text changed since the last run are translated again; the last translated text is kept in `.arabize_translations.json` next to the ARB files.
 
 ```
 dart run arabize_cli:arabize translate --to ar

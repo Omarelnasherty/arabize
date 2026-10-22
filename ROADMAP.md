@@ -32,7 +32,7 @@ One small step at a time. Checked items are done.
 - [x] `arabize translate`: provider interface with OpenAI, Gemini and Anthropic providers, API key from env
 - [x] Keep ICU placeholders, plurals and select intact; validate output and retry on mismatch
 - [x] `arabize.yaml`: glossary, do-not-translate list, tone (MSA or Egyptian)
-- [ ] Translate only new or changed keys
+- [x] Translate only new or changed keys
 - [ ] Prepare 0.4.0
 
 ## 0.5 Tests and text utils
