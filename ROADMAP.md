@@ -33,7 +33,7 @@ One small step at a time. Checked items are done.
 - [x] Keep ICU placeholders, plurals and select intact; validate output and retry on mismatch
 - [x] `arabize.yaml`: glossary, do-not-translate list, tone (MSA or Egyptian)
 - [x] Translate only new or changed keys
-- [ ] Prepare 0.4.0
+- [x] Prepare 0.4.0
 
 ## 0.5 Tests and text utils
 - [ ] `arabize_test`: `testWidgetsBothDirections` and `pumpRtl`
