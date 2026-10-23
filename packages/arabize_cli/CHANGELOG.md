@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.0
+
 - `translate` also translates messages whose source text changed, using `.arabize_translations.json` in the ARB directory to remember what was translated. Commit that file.
 - `translate` reads `arabize.yaml` for a tone (`msa` or `egyptian`), a glossary and a do-not-translate list.
 - Add `arabize translate` with Anthropic, OpenAI and Gemini providers. It adds the messages a target ARB file lacks. The API key comes from `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY`.
