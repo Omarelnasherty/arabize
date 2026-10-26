@@ -96,7 +96,8 @@ flutter pub get
 dart format .
 flutter analyze
 dart test packages/arabize packages/arabize_lints packages/arabize_cli
-flutter test packages/arabize_test/test example/test
+(cd packages/arabize_test && flutter test)
+(cd example && flutter test)
 ```
 
 See [ROADMAP.md](ROADMAP.md) for what is next.
