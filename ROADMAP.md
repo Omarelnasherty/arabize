@@ -37,7 +37,7 @@ One small step at a time. Checked items are done.
 
 ## 0.5 Tests and text utils
 - [x] `arabize_test`: `testWidgetsBothDirections` and `pumpRtl`
-- [ ] RTL golden tests with a bundled Arabic font
+- [x] RTL golden tests with a bundled Arabic font
 - [ ] `arabize`: `normalizeArabic` for search (tashkeel, tatweel, alef/ya/ta marbuta)
 - [ ] `arabize`: Arabic-Indic and Western digits conversion
 - [ ] Final README pass

@@ -18,4 +18,7 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze --no-fatal-infos
       - run: dart test packages/arabize packages/arabize_lints packages/arabize_cli
-      - run: flutter test packages/arabize_test/test example/test
+      - run: flutter test
+        working-directory: packages/arabize_test
+      - run: flutter test
+        working-directory: example
