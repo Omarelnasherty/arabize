@@ -40,7 +40,7 @@ One small step at a time. Checked items are done.
 - [x] RTL golden tests with a bundled Arabic font
 - [x] `arabize`: `normalizeArabic` for search (tashkeel, tatweel, alef/ya/ta marbuta)
 - [x] `arabize`: Arabic-Indic and Western digits conversion
-- [ ] Final README pass
+- [x] Final README pass
 - [ ] Prepare 1.0.0
 
 ## Later
