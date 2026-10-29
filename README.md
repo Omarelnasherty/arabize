@@ -2,11 +2,19 @@
 
 Tools that make Flutter apps ready for Arabic and right-to-left layouts.
 
-Planned:
+```dart
+// Before
+Padding(padding: EdgeInsets.only(left: 16), child: Text('Hello'))
 
-- Lint rules with quick fixes for left/right layout code, for example `EdgeInsets.only(left: 8)` becomes `EdgeInsetsDirectional.only(start: 8)`.
-- A CLI to check and fix a project, extract hardcoded strings to ARB files and translate them.
-- Test helpers that run widget tests in both text directions.
+// After `arabize fix`
+Padding(padding: EdgeInsetsDirectional.only(start: 16), child: Text('Hello'))
+```
+
+What is in the repo:
+
+- Lint rules with quick fixes for left/right layout code.
+- A CLI to check and fix a project, extract hardcoded strings to ARB files, check them and translate them.
+- Test helpers that run widget tests and golden tests in both text directions.
 - Small text utilities for Arabic search and digits.
 
 ## Packages
@@ -81,13 +89,47 @@ dart run arabize_cli:arabize extract --replace
 `arabize translate` fills the target ARB file with the messages it lacks, using the template file as the source. The key is read from `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY`; `--provider` picks one when several are set and `--model` overrides the default model. Messages whose English text changed since the last run are translated again; the last translated text is kept in `.arabize_translations.json` next to the ARB files.
 
 ```
+dart run arabize_cli:arabize l10n-check
 dart run arabize_cli:arabize translate --to ar
 dart run arabize_cli:arabize translate --to ar --provider openai --model gpt-4.1-mini
 ```
 
+Put an `arabize.yaml` next to `pubspec.yaml` to set the tone, a glossary and words that must stay untranslated:
+
+```yaml
+tone: egyptian # or msa
+glossary:
+  cart: عربية التسوق
+do-not-translate:
+  - arabize
 ```
-dart run arabize_cli:arabize l10n-check
+
+### Tests
+
+`arabize_test` runs the same widget test in both directions:
+
+```dart
+testWidgetsBothDirections('shows the back button', () => const MyPage(),
+    (tester, direction) async {
+  expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+});
+
+testGoldensBothDirections('card', () => const MyCard(), name: 'card');
 ```
+
+Goldens are written to `goldens/card.ltr.png` and `goldens/card.rtl.png`, rendered with a bundled Arabic font. `pumpRtl(tester, widget)` pumps a single widget in RTL.
+
+### Text utilities
+
+```dart
+import 'package:arabize/arabize.dart';
+
+normalizeArabic('إِسْلَامِيَّة'); // اسلاميه
+toArabicDigits('2026');          // ٢٠٢٦
+toWesternDigits('٢٠٢٦');         // 2026
+```
+
+Use `normalizeArabic` on both the query and the searched text.
 
 ## Development
 
