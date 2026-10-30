@@ -5,4 +5,4 @@ export 'src/digits.dart';
 export 'src/normalize.dart';
 
 /// The package version.
-const String arabizeVersion = '0.0.1';
+const String arabizeVersion = '1.0.0';

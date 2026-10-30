@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.0.0
+
+- First stable release. No API changes since the previous version.
+
 ## 0.1.0
 
 - Add the plugin entry point.
