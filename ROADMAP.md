@@ -41,7 +41,7 @@ One small step at a time. Checked items are done.
 - [x] `arabize`: `normalizeArabic` for search (tashkeel, tatweel, alef/ya/ta marbuta)
 - [x] `arabize`: Arabic-Indic and Western digits conversion
 - [x] Final README pass
-- [ ] Prepare 1.0.0
+- [x] Prepare 1.0.0
 
 ## Later
 - Hijri dates

@@ -6,4 +6,4 @@ export 'src/both_directions.dart';
 export 'src/golden.dart';
 
 /// The package version.
-const String arabizeTestVersion = '0.0.1';
+const String arabizeTestVersion = '1.0.0';

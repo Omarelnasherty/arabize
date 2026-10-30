@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.0.0
+
+- First stable release. No API changes since the previous version.
+
 ## 0.4.0
 
 - `translate` also translates messages whose source text changed, using `.arabize_translations.json` in the ARB directory to remember what was translated. Commit that file.

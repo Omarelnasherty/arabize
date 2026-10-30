@@ -31,7 +31,7 @@ export 'src/translate_config.dart' show TranslateConfig;
 export 'src/finding.dart' show Finding, arabizeRules, parseAnalyzeOutput;
 
 /// The package version.
-const String arabizeCliVersion = '0.4.0';
+const String arabizeCliVersion = '1.0.0';
 
 const _usage = '''
 Usage: arabize <command>

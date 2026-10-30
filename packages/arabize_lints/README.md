@@ -8,7 +8,7 @@ Add the plugin to your `analysis_options.yaml`:
 
 ```yaml
 plugins:
-  arabize_lints: ^0.1.0
+  arabize_lints: ^1.0.0
 ```
 
 Rules are enabled with the plugin. To pick them one by one:
@@ -16,7 +16,7 @@ Rules are enabled with the plugin. To pick them one by one:
 ```yaml
 plugins:
   arabize_lints:
-    version: ^0.1.0
+    version: ^1.0.0
     diagnostics:
       prefer_directional_edge_insets: true
       prefer_directional_alignment: true
