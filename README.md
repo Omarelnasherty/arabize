@@ -21,11 +21,12 @@ What is in the repo:
 
 | Package | Purpose |
 | --- | --- |
-| `packages/arabize` | Runtime text utilities (pure Dart) |
-| `packages/arabize_lints` | Analyzer plugin with the lint rules |
-| `packages/arabize_cli` | The `arabize` command |
-| `packages/arabize_test` | Flutter test helpers |
-| `example` | Example Flutter app |
+| [arabize_lints](https://pub.dev/packages/arabize_lints) | Analyzer plugin with the lint rules |
+| [arabize_cli](https://pub.dev/packages/arabize_cli) | The `arabize` command |
+| [arabize_test](https://pub.dev/packages/arabize_test) | Flutter test helpers |
+| [arabize](https://pub.dev/packages/arabize) | Runtime text utilities (pure Dart) |
+
+The `example` folder has a Flutter app that triggers every rule.
 
 ## Usage
 
@@ -34,7 +35,7 @@ Add the plugin to the `analysis_options.yaml` at the root of your project (or pu
 ```yaml
 plugins:
   arabize_lints:
-    path: packages/arabize_lints
+    version: ^1.0.0
     diagnostics:
       prefer_directional_edge_insets: true
       prefer_directional_alignment: true
@@ -58,6 +59,10 @@ Padding(
 Most rules come with a quick fix in the editor. `example/lib/rtl_issues.dart` triggers every rule. Run `flutter analyze` in the repo to see them.
 
 ### Command line
+
+```
+dart pub add dev:arabize_cli
+```
 
 `arabize check` runs `dart analyze` and prints only the arabize rules. It exits with 1 when something is found, so it works in CI. The plugin must be enabled as shown above.
 
@@ -106,6 +111,10 @@ do-not-translate:
 
 ### Tests
 
+```
+flutter pub add dev:arabize_test
+```
+
 `arabize_test` runs the same widget test in both directions:
 
 ```dart
@@ -120,6 +129,10 @@ testGoldensBothDirections('card', () => const MyCard(), name: 'card');
 Goldens are written to `goldens/card.ltr.png` and `goldens/card.rtl.png`, rendered with a bundled Arabic font. `pumpRtl(tester, widget)` pumps a single widget in RTL.
 
 ### Text utilities
+
+```
+dart pub add arabize
+```
 
 ```dart
 import 'package:arabize/arabize.dart';
